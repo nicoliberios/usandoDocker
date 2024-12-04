@@ -44,7 +44,7 @@
 </head>
 <body>
     <h1>Villegas</h1>
-    <h2>El pueblo magico</h2>
+    <h2>El pueblo es</h2>
 
     <table>
         <thead>
