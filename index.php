@@ -49,7 +49,7 @@
     <table>
         <thead>
             <tr>
-                <th>Fiestas</th>
+                <th>Vidas</th>
                 <th>Rios</th>
                 <th>Tradicion</th>
                 <th>Piscinas</th>
