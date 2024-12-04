@@ -29,7 +29,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/miapp:latest # Usa tu nombre de repositorio y tag de Docker Hub
+          tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest #
 
       # Paso 2: Desplegar en EC2 usando Docker
       - name: Deploy Docker container to EC21
@@ -44,11 +44,11 @@ jobs:
             sudo apt-get install -y docker.io
 
             # Detener y eliminar cualquier contenedor anterior si existe
-            sudo docker stop miapp || true
-            sudo docker rm miapp || true
+            sudo docker stop awsusandodocker || true
+            sudo docker rm awsusandodocker || true
 
             # Descargar la imagen de Docker desde Docker Hub
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/miapp:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
 
             # Ejecutar la nueva imagen en un contenedor Docker
-            sudo docker run -d --name miapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/miapp:latest
+            sudo docker run -d --name awsusandodocker -p 80:80 ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
