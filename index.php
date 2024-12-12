@@ -1,8 +1,3 @@
-<?php
-// Mostrar el nombre del host
-$hostname = gethostname();
-echo "<h1>Host: $hostname</h1>";
-?>
 
 <!DOCTYPE html>
 <html lang="es">
