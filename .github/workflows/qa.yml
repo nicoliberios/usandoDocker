@@ -1,54 +1,95 @@
-name: Deploy Nicolas to test
+name: Deploy Nicolas
 
 on:
   push:
     branches:
       - test
+
 jobs:
   deploy:
-    name: Deploy to EC22 on test
+    name: Deploy to EC21 and Docker Hub
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Deploy to Server EC22
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST22_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+      # Paso 1: Construir y subir la imagen a Docker Hub
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Executing remote ssh commands using ssh key
+      - name: Build and push Docker image to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest #
+
+      # Paso 2: Desplegar en EC2 usando Docker
+      - name: Deploy Docker container to EC21
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST22_DNS }}
+          host: ${{ secrets.HOSTQA1 }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Actualiza el sistema y Apache
+            # Actualiza el sistema y Docker
             sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo apt-get install -y php libapache2-mod-php
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            # Elimina archivos antiguos en el directorio de Apache
-            sudo rm -rf /var/www/html/*
+            sudo apt-get install -y docker.io
 
-            # Elimina archivos antiguos en el directorio de Apache
-            sudo rm -rf /var/www/html/*
+            # Detener y eliminar cualquier contenedor anterior si existe
+            sudo docker stop awsusandodocker || true
+            sudo docker rm awsusandodocker || true
 
-            # Cambia al directorio donde están tus archivos clonados
-            cd /home/${{ secrets.USERNAME }}/{{ secrets.TARGET_DIR }}
+            # Descargar la imagen de Docker desde Docker Hub
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
 
-            # Mueve todos los archivos al directorio de Apache
-            sudo mv * /var/www/html
+            # Ejecutar la nueva imagen en un contenedor Docker
+            sudo docker run -d --name awsusandodocker -p 80:80 ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
 
-            # Cambia los permisos para que Apache pueda acceder a los archivos
-            sudo chown -R www-data:www-data /var/www/html
-            sudo chmod -R 755 /var/www/html
+      # Paso 3: Desplegar en la segunda instancia EC2 usando Docker
+      - name: Deploy Docker container to EC21 (Instance QA1)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTQA1 }} # DNS o IP de la segunda instancia
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Actualiza el sistema y Docker
+            sudo apt-get -y update
+            sudo apt-get install -y docker.io
 
-            # Reinicia Apache para aplicar los cambios
-            sudo systemctl restart apache2
+            # Detener y eliminar cualquier contenedor anterior si existe
+            sudo docker stop awsusandodocker || true
+            sudo docker rm awsusandodocker || true
+
+            # Descargar la imagen de Docker desde Docker Hub
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
+
+            # Ejecutar la nueva imagen en un contenedor Docker
+            sudo docker run -d --name awsusandodocker -p 80:80 ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
+
+      # Paso 3: Desplegar en la segunda instancia EC2 usan
+      - name: Deploy Docker container to EC21 (Instance QA2)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOSTQA2 }} # DNS o IP de la segunda instancia
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Actualiza el sistema y Docker
+            sudo apt-get -y update
+            sudo apt-get install -y docker.io
+
+            # Detener y eliminar cualquier contenedor anterior si existe
+            sudo docker stop awsusandodocker || true
+            sudo docker rm awsusandodocker || true
+
+            # Descargar la imagen de Docker desde Docker Hub
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
+
+            # Ejecutar la nueva imagen en un contenedor Docker
+            sudo docker run -d --name awsusandodocker -p 80:80 ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
