@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC21 and Docker Hub
+    name: Deploy to EC2 via Load Balancer and Docker Hub
     runs-on: ubuntu-latest
 
     steps:
@@ -29,35 +29,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest #
+          tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
 
-      # Paso 2: Desplegar en EC2 usando Docker
-      - name: Deploy Docker container to EC21
+      # Paso 2: Desplegar en EC2 a través del Load Balancer
+      - name: Deploy Docker container to EC2 via Load Balancer
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOSTPRO1 }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # Actualiza el sistema y Docker
-            sudo apt-get -y update
-            sudo apt-get install -y docker.io
-
-            # Detener y eliminar cualquier contenedor anterior si existe
-            sudo docker stop awsusandodocker || true
-            sudo docker rm awsusandodocker || true
-
-            # Descargar la imagen de Docker desde Docker Hub
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
-
-            # Ejecutar la nueva imagen en un contenedor Docker
-            sudo docker run -d --name awsusandodocker -p 80:80 ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
-
-      # Paso 3: Desplegar en la segunda instancia EC2 usando Docker
-      - name: Deploy Docker container to EC21 (Instance 2)
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOSTPRO2 }} # DNS o IP de la segunda instancia
+          host: ${{ secrets.LOAD_BALANCER_DNS }} # El DNS del balanceador de carga
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
