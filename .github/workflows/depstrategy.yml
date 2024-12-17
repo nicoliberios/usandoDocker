@@ -28,7 +28,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest
 
-      # Paso 2: Desplegar en EC2 a través del Load Balancer
+      # Paso 2: Desplegar en EC2 a través del Load Balan
       - name: Deploy Docker container to EC2 via Load Balancer
         uses: appleboy/ssh-action@master
         with:
