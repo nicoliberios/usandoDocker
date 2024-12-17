@@ -28,7 +28,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/awsusandodocker:latest #
 
-      # Paso 2: Desplegar en EC2 usando Docker
+      # Paso 2: Desplegar en EC2 usando Docke
       - name: Deploy Docker container to EC21
         uses: appleboy/ssh-action@master
         with:
